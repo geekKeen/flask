@@ -30,60 +30,11 @@ Incoming Request Data
 
 .. autoclass:: Request
    :members:
-
-   .. attribute:: form
-
-      A :class:`~werkzeug.datastructures.MultiDict` with the parsed form data from ``POST``
-      or ``PUT`` requests.  Please keep in mind that file uploads will not
-      end up here,  but instead in the :attr:`files` attribute.
-
-   .. attribute:: args
-
-      A :class:`~werkzeug.datastructures.MultiDict` with the parsed contents of the query
-      string.  (The part in the URL after the question mark).
-
-   .. attribute:: values
-
-      A :class:`~werkzeug.datastructures.CombinedMultiDict` with the contents of both
-      :attr:`form` and :attr:`args`.
-
-   .. attribute:: cookies
-
-      A :class:`dict` with the contents of all cookies transmitted with
-      the request.
-
-   .. attribute:: stream
-
-      If the incoming form data was not encoded with a known mimetype
-      the data is stored unmodified in this stream for consumption.  Most
-      of the time it is a better idea to use :attr:`data` which will give
-      you that data as a string.  The stream only returns the data once.
-
-   .. attribute:: headers
-
-      The incoming request headers as a dictionary like object.
-
-   .. attribute:: data
-
-      Contains the incoming request data as string in case it came with
-      a mimetype Flask does not handle.
-
-   .. attribute:: files
-
-      A :class:`~werkzeug.datastructures.MultiDict` with files uploaded as part of a
-      ``POST`` or ``PUT`` request.  Each file is stored as
-      :class:`~werkzeug.datastructures.FileStorage` object.  It basically behaves like a
-      standard file object you know from Python, with the difference that
-      it also has a :meth:`~werkzeug.datastructures.FileStorage.save` function that can
-      store the file on the filesystem.
+   :inherited-members:
 
    .. attribute:: environ
 
       The underlying WSGI environment.
-
-   .. attribute:: method
-
-      The current request method (``POST``, ``GET`` etc.)
 
    .. attribute:: path
    .. attribute:: full_path
@@ -114,15 +65,8 @@ Incoming Request Data
       `url_root`    ``u'http://www.example.com/myapplication/'``
       ============= ======================================================
 
-   .. attribute:: is_xhr
 
-      ``True`` if the request was triggered via a JavaScript
-      `XMLHttpRequest`. This only works with libraries that support the
-      ``X-Requested-With`` header and set it to `XMLHttpRequest`.
-      Libraries that do that are prototype, jQuery and Mochikit and
-      probably some more.
-
-.. class:: request
+.. attribute:: request
 
    To access incoming request data, you can use the global `request`
    object.  Flask parses incoming request data for you and gives you
@@ -141,7 +85,7 @@ Response Objects
 ----------------
 
 .. autoclass:: flask.Response
-   :members: set_cookie, data, mimetype
+   :members: set_cookie, data, mimetype, is_json, get_json
 
    .. attribute:: headers
 
@@ -159,12 +103,12 @@ Response Objects
 Sessions
 --------
 
-If you have the :attr:`Flask.secret_key` set you can use sessions in Flask
-applications.  A session basically makes it possible to remember
-information from one request to another.  The way Flask does this is by
-using a signed cookie.  So the user can look at the session contents, but
-not modify it unless they know the secret key, so make sure to set that
-to something complex and unguessable.
+If you have set :attr:`Flask.secret_key` (or configured it from
+:data:`SECRET_KEY`) you can use sessions in Flask applications. A session makes
+it possible to remember information from one request to another. The way Flask
+does this is by using a signed cookie. The user can look at the session
+contents, but can't modify it unless they know the secret key, so make sure to
+set that to something complex and unguessable.
 
 To access the current session you can use the :class:`session` object:
 
@@ -227,18 +171,6 @@ implementation that Flask is using.
 .. autoclass:: SessionMixin
    :members:
 
-.. autodata:: session_json_serializer
-
-   This object provides dumping and loading methods similar to simplejson
-   but it also tags certain builtin Python objects that commonly appear in
-   sessions.  Currently the following extended values are supported in
-   the JSON it dumps:
-
-   -    :class:`~markupsafe.Markup` objects
-   -    :class:`~uuid.UUID` objects
-   -    :class:`~datetime.datetime` objects
-   -   :class:`tuple`\s
-
 .. admonition:: Notice
 
    The ``PERMANENT_SESSION_LIFETIME`` config key can also be an integer
@@ -289,7 +221,7 @@ thing, like it does for :class:`request` and :class:`session`.
    It's now also possible to use the ``in`` operator on it to see if an
    attribute is defined and it yields all keys on iteration.
 
-   As of 1.0 you can use :meth:`pop` and :meth:`setdefault` in the same
+   As of 0.11 you can use :meth:`pop` and :meth:`setdefault` in the same
    way you would use them on a dictionary.
 
    This is a proxy.  See :ref:`notes-on-proxies` for more information.
@@ -316,13 +248,7 @@ Useful Functions and Classes
 
 .. autofunction:: url_for
 
-.. function:: abort(code)
-
-   Raises an :exc:`~werkzeug.exceptions.HTTPException` for the given
-   status code.  For example to abort request handling with a page not
-   found exception, you would call ``abort(404)``.
-
-   :param code: the HTTP error code.
+.. autofunction:: abort
 
 .. autofunction:: redirect
 
@@ -415,6 +341,8 @@ you are using Flask 0.10 which implies that:
 
 .. autoclass:: JSONDecoder
    :members:
+
+.. automodule:: flask.json.tag
 
 Template Rendering
 ------------------
@@ -711,6 +639,7 @@ The following signals exist in Flask:
 
 .. _blinker: https://pypi.python.org/pypi/blinker
 
+.. _class-based-views:
 
 Class-Based Views
 -----------------
@@ -751,6 +680,8 @@ The following converters are available:
 `int`       accepts integers
 `float`     like `int` but for floating point values
 `path`      like the default but also accepts slashes
+`any`       matches one of the items provided
+`uuid`      accepts UUID strings
 =========== ===============================================
 
 Custom converters can be defined using :attr:`flask.Flask.url_map`.
@@ -883,19 +814,14 @@ Command Line Interface
 .. autoclass:: ScriptInfo
    :members:
 
+.. autofunction:: load_dotenv
+
 .. autofunction:: with_appcontext
 
 .. autofunction:: pass_script_info
 
    Marks a function so that an instance of :class:`ScriptInfo` is passed
    as first argument to the click callback.
-
-.. autofunction:: script_info_option
-
-   A special decorator that informs a click callback to be passed the
-   script info object as first argument.  This is normally not useful
-   unless you implement very special commands like the run command which
-   does not want the application to be loaded yet.
 
 .. autodata:: run_command
 

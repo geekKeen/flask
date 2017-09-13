@@ -440,3 +440,14 @@ class Blueprint(_PackageBoundObject):
         """
         self.record_once(lambda s: s.app._register_error_handler(
             self.name, code_or_exception, f))
+
+    def register_blueprint(self, blueprint, **options):
+        # todo: 实现蓝图注册蓝图特性
+        # 将注册的蓝图添加一个前缀，然后直接注册到 app 上，造成是被蓝图注册的假象
+        # 注意点：注册的蓝图的一些选项应该在被注册蓝图的基础上，比如 url_prefix
+        # url_for('.index') 这种操作的处理， 着重查看 url_for 的实现
+        # Blueprint 的 options 的传递
+        name = '_'.join((self.name, blueprint.name))
+        blueprint.name = name
+        self.record_once(lambda s: s.app.register_blueprint(
+            blueprint, **options))
